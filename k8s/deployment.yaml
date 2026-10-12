@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-deployment
+  # ===========================================================================
+  # REPLACE WITH YOUR NAMESPACE FROM WELCOME EMAIL (e.g., student-mca-2401060)
+  # ===========================================================================
+  namespace: CHANGE_ME_K8S_NAMESPACE
+  labels:
+    app: my-app
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      # Optional: If pulling from private Nexus requires credentials in your namespace,
+      # reference your secret here (usually pre-configured by admin or created via kubectl):
+      # imagePullSecrets:
+      #   - name: nexus-docker-secret
+      containers:
+        - name: my-app
+          # ===================================================================
+          # Jenkinsfile will automatically replace this with the built image tag.
+          # Format: <nexus-registry>/<student-path>/<image-name>:<tag>
+          # Example: nexus.imcc.skilli.in/student-docker/mca-2401060/my-app:latest
+          # ===================================================================
+          image: CHANGE_ME_NEXUS_REGISTRY/CHANGE_ME_NEXUS_IMAGE_PATH/my-app:latest
+          imagePullPolicy: Always
+          ports:
+            # Must match the port your application listens on
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+          
+          # ===================================================================
+          # Resource requests and limits MUST stay within your student quota:
+          # CPU Limit max: 500m, Memory Limit max: 512Mi
+          # ===================================================================
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          # Health checks ensuring Kubernetes restarts unhealthy pods
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2

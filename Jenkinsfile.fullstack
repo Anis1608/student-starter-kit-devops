@@ -1,0 +1,185 @@
+// =============================================================================
+// Skilli College DevOps Lab - Fullstack CI/CD Pipeline (Frontend + Backend)
+// Flow: GitHub -> Jenkins -> SonarQube -> Build 2 Docker Images -> Nexus -> K8s
+//
+// ⚡ GITHUB WEBHOOK SETUP FOR AUTO-DEPLOY ON "git push":
+// 1. In your GitHub repo, go to: Settings -> Webhooks -> Add webhook
+// 2. Payload URL: https://jenkins.imcc.skilli.in/github-webhook/  (Keep ending slash!)
+// 3. Content type: application/json
+// 4. Secret: <Leave Empty>
+// 5. SSL verification: Enable SSL verification
+// 6. Which events: Just the push event
+// 7. Active: Checked [x]
+// 8. Click "Add webhook" -> Now every "git push" triggers auto-deploy!
+// =============================================================================
+
+pipeline {
+    agent any
+
+    // Triggers: Auto-run on GitHub Push (Webhook) or check for new commits
+    triggers {
+        githubPush()
+        pollSCM('H/5 * * * *')
+    }
+
+    environment {
+        // =====================================================================
+        // [CONFIG] FILL FROM YOUR WELCOME EMAIL
+        // =====================================================================
+        SONAR_HOST_URL      = 'https://sonarqube.imcc.skilli.in'
+        SONAR_PROJECT_KEY   = 'CHANGE_ME_SONAR_PROJECT_KEY'  // e.g. 'mca-2401060-project'
+        
+        NEXUS_REGISTRY      = 'nexus.imcc.skilli.in'
+        NEXUS_REPO_PATH     = 'CHANGE_ME_NEXUS_IMAGE_PATH'   // e.g. 'student-docker/mca-2401060'
+        
+        K8S_NAMESPACE       = 'CHANGE_ME_K8S_NAMESPACE'      // e.g. 'student-mca-2401060'
+        
+        // Jenkins Credential IDs
+        SONAR_CRED_ID       = 'sonar-token-student'
+        NEXUS_CRED_ID       = 'nexus-student-creds'
+        KUBE_CRED_ID        = 'student-kubeconfig'
+
+        // Dynamic Image Tags
+        IMAGE_TAG           = "${env.BUILD_NUMBER}-${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'latest'}"
+        
+        BACKEND_IMAGE       = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/backend:${env.IMAGE_TAG}"
+        BACKEND_LATEST      = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/backend:latest"
+        
+        FRONTEND_IMAGE      = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/frontend:${env.IMAGE_TAG}"
+        FRONTEND_LATEST     = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/frontend:latest"
+    }
+
+    stages {
+        stage('1. Checkout Code') {
+            steps {
+                echo "🚀 Checking out fullstack source code..."
+                checkout scm
+            }
+        }
+
+        stage('2. Install & Test') {
+            steps {
+                echo "📦 Testing Backend and Frontend..."
+                sh '''
+                    if [ -d backend ] && [ -f backend/package.json ]; then
+                        cd backend && npm ci && npm test --if-present && cd ..
+                    fi
+                    if [ -d frontend ] && [ -f frontend/package.json ]; then
+                        cd frontend && npm ci && npm test --if-present && cd ..
+                    fi
+                '''
+            }
+        }
+
+        stage('3. SonarQube Analysis') {
+            steps {
+                echo "📊 Running SonarQube Quality Scan..."
+                withCredentials([string(credentialsId: env.SONAR_CRED_ID, variable: 'SONAR_TOKEN')]) {
+                    sh """
+                        if which sonar-scanner > /dev/null 2>&1; then
+                            sonar-scanner \\
+                                -Dsonar.host.url=${env.SONAR_HOST_URL} \\
+                                -Dsonar.login=\${SONAR_TOKEN} \\
+                                -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \\
+                                -Dsonar.sources=backend/src,frontend/src
+                        else
+                            docker run --rm \\
+                                -e SONAR_HOST_URL="${env.SONAR_HOST_URL}" \\
+                                -e SONAR_TOKEN="\${SONAR_TOKEN}" \\
+                                -v "\$(pwd):/usr/src" \\
+                                sonarsource/sonar-scanner-cli \\
+                                -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \\
+                                -Dsonar.sources=. || true
+                        fi
+                    """
+                }
+            }
+        }
+
+        // Parallel Build for Speed: Builds both Docker images simultaneously
+        stage('4. Docker Build (Parallel)') {
+            parallel {
+                stage('Build Backend Image') {
+                    steps {
+                        echo "🐳 Building Backend Container Image: ${BACKEND_IMAGE}..."
+                        sh """
+                            docker build -t ${BACKEND_IMAGE} -t ${BACKEND_LATEST} -f backend/Dockerfile backend/
+                        """
+                    }
+                }
+                stage('Build Frontend Image') {
+                    steps {
+                        echo "🐳 Building Frontend Container Image: ${FRONTEND_IMAGE}..."
+                        sh """
+                            docker build -t ${FRONTEND_IMAGE} -t ${FRONTEND_LATEST} -f frontend/Dockerfile frontend/
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('5. Push to Nexus Registry') {
+            steps {
+                echo "📤 Authenticating and pushing both images to Nexus..."
+                withCredentials([usernamePassword(credentialsId: env.NEXUS_CRED_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sh """
+                        echo "\${NEXUS_PASSWORD}" | docker login -u "\${NEXUS_USER}" --password-stdin ${env.NEXUS_REGISTRY}
+                        
+                        echo "Pushing Backend images..."
+                        docker push ${BACKEND_IMAGE}
+                        docker push ${BACKEND_LATEST}
+                        
+                        echo "Pushing Frontend images..."
+                        docker push ${FRONTEND_IMAGE}
+                        docker push ${FRONTEND_LATEST}
+                        
+                        docker logout ${env.NEXUS_REGISTRY} || true
+                    """
+                }
+            }
+        }
+
+        stage('6. Deploy Fullstack to Kubernetes') {
+            steps {
+                echo "☸️ Applying fullstack manifests to namespace ${env.K8S_NAMESPACE}..."
+                withCredentials([file(credentialsId: env.KUBE_CRED_ID, variable: 'KUBECONFIG_FILE')]) {
+                    sh """
+                        export KUBECONFIG=\${KUBECONFIG_FILE}
+                        
+                        echo "Applying Kubernetes manifests from k8s/..."
+                        kubectl apply -f k8s/ -n ${env.K8S_NAMESPACE}
+                        
+                        echo "Updating deployment images..."
+                        kubectl set image deployment/backend-deployment backend=${BACKEND_IMAGE} -n ${env.K8S_NAMESPACE} || true
+                        kubectl set image deployment/frontend-deployment frontend=${FRONTEND_IMAGE} -n ${env.K8S_NAMESPACE} || true
+                    """
+                }
+            }
+        }
+
+        stage('7. Verify Rollout Status') {
+            steps {
+                echo "🔍 Checking rollout status for both tiers..."
+                withCredentials([file(credentialsId: env.KUBE_CRED_ID, variable: 'KUBECONFIG_FILE')]) {
+                    sh """
+                        export KUBECONFIG=\${KUBECONFIG_FILE}
+                        
+                        kubectl rollout status deployment/backend-deployment -n ${env.K8S_NAMESPACE} --timeout=120s
+                        kubectl rollout status deployment/frontend-deployment -n ${env.K8S_NAMESPACE} --timeout=120s
+                        
+                        kubectl get pods,svc,ingress -n ${env.K8S_NAMESPACE}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "🎉 Fullstack Application (Frontend + Backend) deployed successfully!"
+        }
+        failure {
+            echo "❌ Fullstack Pipeline failed! Check logs above."
+        }
+    }
+}

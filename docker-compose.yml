@@ -1,0 +1,67 @@
+# =============================================================================
+# Skilli DevOps Lab - Fullstack Local Development (Docker Compose)
+# Test your Frontend + Backend + Database locally before pushing to Jenkins
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. BACKEND API SERVICE
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: student-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DATABASE_URL=mongodb://mongo:27017/studentdb # or postgresql://postgres:password@postgres:5432/studentdb
+    networks:
+      - student-network
+    depends_on:
+      - mongo
+
+  # ---------------------------------------------------------------------------
+  # 2. FRONTEND UI SERVICE (React / Vite / Vue / Next.js)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: student-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      # In browser, frontend calls relative path /api or backend container
+      - VITE_API_URL=/api
+    networks:
+      - student-network
+    depends_on:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # 3. DATABASE (Optional local development database)
+  # ---------------------------------------------------------------------------
+  mongo:
+    image: mongo:6-jammy
+    container_name: student-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - student-network
+
+networks:
+  student-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

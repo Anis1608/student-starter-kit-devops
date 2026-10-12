@@ -1,0 +1,45 @@
+# =============================================================================
+# Skilli DevOps Lab - Docker Ignore File
+# Excludes local files, dependencies, secrets, and repository overhead
+# =============================================================================
+
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+__pycache__/
+*.pyc
+venv/
+.env*/
+
+# Local secrets & configs (CRITICAL: NEVER COMMIT OR DOCKERIZE SECRETS)
+.env
+.env.local
+.env.production
+*.kubeconfig
+kubeconfig*
+*.pem
+*.key
+
+# Git and Version Control
+.git/
+.gitignore
+.github/
+
+# Build artifacts
+dist/
+build/
+coverage/
+.nyc_output/
+
+# CI/CD and Lab Manifests (Manifests are applied via kubectl, not copied into container)
+k8s/
+Jenkinsfile
+sonar-project.properties
+README.md
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
