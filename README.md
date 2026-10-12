@@ -71,57 +71,47 @@ Aapko mile Welcome Email ke values ko files me is tarah replace karein:
 
 ---
 
-### STEP 2: Jenkins Me Apne Folder Me Credentials Create Karein
+### STEP 2: Jenkins Me Apni Unique Credentials Create Karein
 
-> ⚠️ **IMPORTANT — Global me nahi, Folder ke andar create karein!**
-> Admin ne har student ke liye ek **isolated Jenkins Folder** auto-create kiya hua hai:
-> `jenkins.imcc.skilli.in/job/student-<your-rollno>/`
-> Aapko credentials **isi folder ke andar** create karne hain taaki kisi aur student ke credentials se overlap na ho!
+> 💡 **Zero Overlap Guaranteed!**
+> Har student ko unke roll number se prefixed unique credential IDs mili hain (e.g. `2401098a-sonar-token`).
+> Isliye Jenkins me credentials banate waqt kisi doosre student ke credentials se kabhi koi conflict ya overlap nahi hoga!
 
 Steps:
 1. Jenkins open karein: 👉 **https://jenkins.imcc.skilli.in**
 2. Login karein (email me mila username/password use karein)
-3. Apna folder dhundhen: `student-<your-rollno>` (e.g. `student-mca2401060`)
-4. Folder ke andar jayein ➔ **Credentials** ➔ **Folder (student-mca2401060)** ➔ **Global credentials** ➔ **Add Credentials**
+3. Jenkins me jayein: **Manage Jenkins** ➔ **Credentials** ➔ **System** ➔ **Global credentials (unrestricted)** ➔ **Add Credentials**
+   *(Ya dashboard ke left menu me **Credentials** ➔ **Global credentials** ➔ **Add Credentials** click karein)*
 
 #### 1️⃣ SonarQube Token Credential:
 - **Kind:** `Secret text`
-- **Scope:** `Global (student-<rollno> folder scoped)`
 - **Secret:** Apna SonarQube Analysis Token paste karein (e.g. `sqa_xxxxxxxxxxxx` jo email me mila tha)
-- **ID:** `sonar-token-student` *(Exact yahi ID deni hai!)*
-- **Description:** `SonarQube Student Analysis Token`
+- **ID:** `<your-rollno>-sonar-token` *(Apne welcome email se exact ID copy karein, e.g. `2401098a-sonar-token`)*
+- **Description:** `SonarQube Student Token`
 
-#### 2️⃣ Nexus Registry Credential:
-- **Kind:** `Username with password`
-- **Scope:** `Global (student-<rollno> folder scoped)`
-- **Username:** Apna student username (lowercase, e.g. `mca-2401060`)
-- **Password:** Apna Nexus password (jo email me mila tha)
-- **ID:** `nexus-student-creds` *(Exact yahi ID deni hai!)*
-- **Description:** `Nexus Docker Registry Student Credentials`
-
-#### 3️⃣ Kubernetes Kubeconfig Credential:
+#### 2️⃣ Kubernetes Kubeconfig Credential:
 - College Admin Panel me apne profile par jakar **"Download .kubeconfig"** button dabayein (is se `<namespace>-kubeconfig.yaml` file download hogi).
-- Jenkins me (apne folder ke andar Credentials section me):
+- Jenkins me Add Credentials par:
   - **Kind:** `Secret file`
-  - **Scope:** `Global (student-<rollno> folder scoped)`
-  - **File:** Download hui `.yaml` file ko choose karein (extension matter nahi karta!)
-  - **ID:** `student-kubeconfig` *(Exact yahi ID deni hai!)*
-  - **Description:** `Student Namespace Scoped Kubeconfig`
+  - **File:** Download hui `.yaml` file ko choose karein
+  - **ID:** `<your-rollno>-kubeconfig` *(Apne welcome email se exact ID copy karein, e.g. `2401098a-kubeconfig`)*
+  - **Description:** `Student Kubeconfig File`
+
+> ℹ️ **Nexus Registry Credential:** Nexus ke liye alag se Jenkins credential create karne ki zaroorat nahi hai! Nexus login credentials (`NEXUS_USER` & `NEXUS_PASS`) aapko seedha apne `Jenkinsfile` ke environment block me likhne hain (jo email me mile hain).
 
 ---
 
-### STEP 3: Apne Jenkins Folder Me Pipeline Job Banayein
-1. Apna Jenkins folder open karein: `jenkins.imcc.skilli.in/job/student-<your-rollno>/`
-2. Folder ke andar **"New Item"** click karein.
-3. Job ka name likhein: `devops-pipeline`
-4. **"Pipeline"** select karke **OK** dabayein.
-5. Pipeline configuration me scroll karke:
+### STEP 3: Jenkins Me Apni Pipeline Job Banayein
+1. Jenkins home dashboard par jayein aur **"New Item"** click karein.
+2. Job ka name likhein: e.g. `my-app` ya `<your-rollno>-pipeline`
+3. **"Pipeline"** select karke **OK** dabayein.
+4. Pipeline configuration me scroll karke:
    - **Definition:** `Pipeline script from SCM`
    - **SCM:** `Git`
    - **Repository URL:** Apne GitHub repo ka URL (e.g. `https://github.com/username/repo.git`)
    - **Branch Specifier:** `*/main`
    - **Script Path:** `Jenkinsfile`
-6. **Save** par click karein.
+5. **Save** par click karein.
 
 ---
 

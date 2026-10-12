@@ -13,13 +13,12 @@
 // 8. Click "Add webhook" -> Now every "git push" triggers auto-deploy!
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// 🔑 CREDENTIALS NEEDED (Create inside YOUR Jenkins Folder, not Global!):
+// 🔑 CREDENTIALS NEEDED (Create in Jenkins -> Credentials -> Global credentials):
 //
-//   Folder: jenkins.imcc.skilli.in/job/student-<rollno>/
+//   1. ID: <your-rollno>-sonar-token  → Kind: Secret text  → Value: SonarQube token (sqa_...)
+//   2. ID: <your-rollno>-kubeconfig   → Kind: Secret file  → Value: kubeconfig .yaml from Admin Panel
 //
-//   1. ID: sonar-token-student  → Kind: Secret text  → Value: SonarQube token (sqa_...)
-//   2. ID: student-kubeconfig   → Kind: Secret file  → Value: kubeconfig .yaml from Admin Panel
-//
+//   ✅ Har student ki ID unke roll number se unique hai (Zero overlap)!
 //   ✅ NO nexus-student-creds needed! Nexus login is handled via NEXUS_USER/NEXUS_PASS below.
 // =============================================================================
 
@@ -59,11 +58,11 @@ pipeline {
         NEXUS_PASS          = 'CHANGE_ME_NEXUS_PASSWORD'     // Example: 'Skilli@123'
 
         // =====================================================================
-        // [STEP 2] JENKINS CREDENTIAL IDs
-        // Create INSIDE your Jenkins Folder (student-<rollno>) → Credentials
+        // [STEP 2] YOUR UNIQUE JENKINS CREDENTIAL IDs (From Welcome Email)
+        // Global credentials me banayi hui exact unique IDs yahan dalein:
         // =====================================================================
-        SONAR_CRED_ID       = 'sonar-token-student'   // Kind: Secret text
-        KUBE_CRED_ID        = 'student-kubeconfig'    // Kind: Secret file
+        SONAR_CRED_ID       = 'CHANGE_ME_SONAR_CRED_ID'   // Example: '2401098a-sonar-token'
+        KUBE_CRED_ID        = 'CHANGE_ME_KUBE_CRED_ID'    // Example: '2401098a-kubeconfig'
         // NOTE: nexus-student-creds is NOT needed — using NEXUS_USER/NEXUS_PASS above
 
         // Dynamic Image Tags (auto-generated, do not edit)
