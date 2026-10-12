@@ -71,47 +71,57 @@ Aapko mile Welcome Email ke values ko files me is tarah replace karein:
 
 ---
 
-### STEP 2: Jenkins Me 3 Credentials Create Karein
-Jenkins open karein: 👉 **https://jenkins.imcc.skilli.in**  
-Login karne ke baad: **Manage Jenkins** ➔ **Credentials** ➔ **(global)** ➔ **Add Credentials** par jayein:
+### STEP 2: Jenkins Me Apne Folder Me Credentials Create Karein
+
+> ⚠️ **IMPORTANT — Global me nahi, Folder ke andar create karein!**
+> Admin ne har student ke liye ek **isolated Jenkins Folder** auto-create kiya hua hai:
+> `jenkins.imcc.skilli.in/job/student-<your-rollno>/`
+> Aapko credentials **isi folder ke andar** create karne hain taaki kisi aur student ke credentials se overlap na ho!
+
+Steps:
+1. Jenkins open karein: 👉 **https://jenkins.imcc.skilli.in**
+2. Login karein (email me mila username/password use karein)
+3. Apna folder dhundhen: `student-<your-rollno>` (e.g. `student-mca2401060`)
+4. Folder ke andar jayein ➔ **Credentials** ➔ **Folder (student-mca2401060)** ➔ **Global credentials** ➔ **Add Credentials**
 
 #### 1️⃣ SonarQube Token Credential:
 - **Kind:** `Secret text`
-- **Scope:** `Global`
+- **Scope:** `Global (student-<rollno> folder scoped)`
 - **Secret:** Apna SonarQube Analysis Token paste karein (e.g. `sqa_xxxxxxxxxxxx` jo email me mila tha)
 - **ID:** `sonar-token-student` *(Exact yahi ID deni hai!)*
 - **Description:** `SonarQube Student Analysis Token`
 
 #### 2️⃣ Nexus Registry Credential:
 - **Kind:** `Username with password`
-- **Scope:** `Global`
+- **Scope:** `Global (student-<rollno> folder scoped)`
 - **Username:** Apna student username (lowercase, e.g. `mca-2401060`)
 - **Password:** Apna Nexus password (jo email me mila tha)
 - **ID:** `nexus-student-creds` *(Exact yahi ID deni hai!)*
 - **Description:** `Nexus Docker Registry Student Credentials`
 
 #### 3️⃣ Kubernetes Kubeconfig Credential:
-- College Admin Panel me apne profile par jakar **"Download Kubeconfig"** button dabayein.
-- Jenkins me:
+- College Admin Panel me apne profile par jakar **"Download .kubeconfig"** button dabayein (is se `<namespace>-kubeconfig.yaml` file download hogi).
+- Jenkins me (apne folder ke andar Credentials section me):
   - **Kind:** `Secret file`
-  - **Scope:** `Global`
-  - **File:** Download kiya hua `.kubeconfig` file choose karein
+  - **Scope:** `Global (student-<rollno> folder scoped)`
+  - **File:** Download hui `.yaml` file ko choose karein (extension matter nahi karta!)
   - **ID:** `student-kubeconfig` *(Exact yahi ID deni hai!)*
   - **Description:** `Student Namespace Scoped Kubeconfig`
 
 ---
 
-### STEP 3: Jenkins Me Pipeline Job Banayein
-1. Jenkins dashboard par **"New Item"** click karein.
-2. Job ka name likhein (e.g. `mca-2401060-pipeline`).
-3. **"Pipeline"** select karke **OK** dabayein.
-4. Pipeline configuration me scroll karke:
+### STEP 3: Apne Jenkins Folder Me Pipeline Job Banayein
+1. Apna Jenkins folder open karein: `jenkins.imcc.skilli.in/job/student-<your-rollno>/`
+2. Folder ke andar **"New Item"** click karein.
+3. Job ka name likhein: `devops-pipeline`
+4. **"Pipeline"** select karke **OK** dabayein.
+5. Pipeline configuration me scroll karke:
    - **Definition:** `Pipeline script from SCM`
    - **SCM:** `Git`
    - **Repository URL:** Apne GitHub repo ka URL (e.g. `https://github.com/username/repo.git`)
    - **Branch Specifier:** `*/main`
    - **Script Path:** `Jenkinsfile`
-5. **Save** par click karein.
+6. **Save** par click karein.
 
 ---
 
