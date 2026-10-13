@@ -2,9 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: my-app-ingress
-  # ===========================================================================
-  # REPLACE WITH YOUR NAMESPACE FROM WELCOME EMAIL (e.g., student-mca-2401060)
-  # ===========================================================================
+  # ✏️ Your Kubernetes namespace (Email: "Kubernetes Namespace")
+  # Example: student-24010988a
   namespace: CHANGE_ME_K8S_NAMESPACE
   annotations:
     kubernetes.io/ingress.class: "nginx"
@@ -12,24 +11,19 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
-  # ===========================================================================
-  # TLS / HTTPS CONFIGURATION
-  # Host must match the assigned application URL domain from your email
-  # Example: mca-2401060.imcc.skilli.in (without https://)
-  # ===========================================================================
   tls:
     - hosts:
+        # ✏️ Your live domain (Email: "Application Domain")
+        # Example: 24010988a.imcc.skilli.in
         - CHANGE_ME_APPLICATION_DOMAIN
       secretName: student-app-tls
   rules:
-    - host: CHANGE_ME_APPLICATION_DOMAIN
+    - host: CHANGE_ME_APPLICATION_DOMAIN   # ✏️ Same domain as above
       http:
         paths:
-          # ===================================================================
-          # 1. API REQUESTS -> BACKEND SERVICE (For Fullstack Apps)
-          # All requests starting with /api (e.g. /api/login, /api/users)
-          # are automatically forwarded to backend-service on port 5000.
-          # ===================================================================
+          # ─── API requests → Backend Service ────────────────────────────────
+          # All requests starting with /api go to backend pod (port 5000)
+          # e.g. /api/login, /api/products, /api/users
           - path: /api
             pathType: Prefix
             backend:
@@ -38,11 +32,8 @@ spec:
                 port:
                   number: 5000
 
-          # ===================================================================
-          # 2. FRONTEND / UI REQUESTS (Root Path)
-          # All webpage requests / static files are sent to frontend-service.
-          # (If you only have a single service, change name to 'my-app-service')
-          # ===================================================================
+          # ─── Frontend / UI requests → Frontend Service ──────────────────────
+          # All other requests (/, /home, /about, static files) → nginx frontend
           - path: /
             pathType: Prefix
             backend:
@@ -50,4 +41,3 @@ spec:
                 name: frontend-service
                 port:
                   number: 80
-

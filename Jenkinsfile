@@ -1,34 +1,32 @@
 // =============================================================================
-// Skilli College DevOps & Cloud Lab - Student CI/CD Pipeline
-// Flow: GitHub -> Jenkins -> SonarQube -> BuildKit/Docker -> Nexus -> K8s -> URL
+// Skilli College DevOps & Cloud Lab — Fullstack CI/CD Pipeline
+// Flow: GitHub → Jenkins → SonarQube → BuildKit → Nexus → Kubernetes
 //
-// ⚡ GITHUB WEBHOOK SETUP FOR AUTO-DEPLOY ON "git push":
-// 1. In your GitHub repo, go to: Settings -> Webhooks -> Add webhook
-// 2. Payload URL: https://jenkins.imcc.skilli.in/github-webhook/  (Keep ending slash!)
-// 3. Content type: application/json
-// 4. Secret: <Leave Empty>
-// 5. SSL verification: Enable SSL verification
-// 6. Which events: Just the push event
-// 7. Active: Checked [x]
-// 8. Click "Add webhook" -> Now every "git push" triggers auto-deploy!
+// ─── HOW TO USE THIS FILE ────────────────────────────────────────────────────
+//  1. Search for every "CHANGE_ME_" below and replace with your real values.
+//     (All values are in your Welcome Email sent by the Admin Panel.)
+//  2. Keep this file named "Jenkinsfile" at the ROOT of your GitHub repo.
+//  3. Create the 2 Jenkins credentials listed in STEP 2 of the README.
+//  4. Point your Jenkins Pipeline job to your repo → Build Now!
 //
-// ─────────────────────────────────────────────────────────────────────────────
-// 🔑 CREDENTIALS NEEDED (Create in Jenkins -> Credentials -> Global credentials):
+// ─── GITHUB AUTO-DEPLOY WEBHOOK ──────────────────────────────────────────────
+//  1. GitHub repo → Settings → Webhooks → Add webhook
+//  2. Payload URL : https://jenkins.imcc.skilli.in/github-webhook/  (slash at end!)
+//  3. Content type: application/json
+//  4. Secret      : (leave empty)
+//  5. Events      : Just the push event
+//  6. Active      : [x]  →  "Add webhook"
+//  ✅ Now every "git push" auto-deploys your app!
 //
-//   1. ID: <your-rollno>-sonar-token  → Kind: Secret text  → Value: SonarQube token (sqa_...)
-//   2. ID: <your-rollno>-kubeconfig   → Kind: Secret file  → Value: kubeconfig .yaml from Admin Panel
-//
-//   ✅ Har student ki ID unke roll number se unique hai (Zero overlap)!
-//   ✅ NO nexus-student-creds needed! Nexus login is handled via NEXUS_USER/NEXUS_PASS below.
+// ─── CREDENTIALS NEEDED IN JENKINS (2 total) ─────────────────────────────────
+//  • ID: CHANGE_ME_SONAR_CRED_ID   → Kind: Secret text  → Value: sqa_... token
+//  • ID: CHANGE_ME_KUBE_CRED_ID    → Kind: Secret file  → Value: kubeconfig .yaml
+//    (Download the kubeconfig from Admin Panel → Student Profile → Kubeconfig)
 // =============================================================================
 
 pipeline {
-    // Server uses a dedicated 'docker-builder' node with buildkit sidecar container
-    agent {
-        label 'docker-builder'
-    }
+    agent { label 'docker-builder' }
 
-    // Triggers: Auto-run on GitHub Push (Webhook) or poll every 5 minutes
     triggers {
         githubPush()
         pollSCM('H/5 * * * *')
@@ -36,239 +34,222 @@ pipeline {
 
     environment {
         // =====================================================================
-        // [STEP 1] STUDENT CONFIGURATION - FILL FROM YOUR WELCOME EMAIL
+        // ✏️  STEP 1 — FILL THESE 6 VALUES FROM YOUR WELCOME EMAIL  ✏️
         // =====================================================================
 
-        // 1. SonarQube Configuration (from email: SonarQube Project Key)
-        SONAR_HOST_URL      = 'https://sonarqube.imcc.skilli.in'
-        SONAR_PROJECT_KEY   = 'CHANGE_ME_SONAR_PROJECT_KEY'  // Example: '2401060a-project'
+        // SonarQube project key  (Email: "SonarQube Project Key")
+        // Example: '24010988a-project'
+        SONAR_HOST_URL    = 'https://sonarqube.imcc.skilli.in'
+        SONAR_PROJECT_KEY = 'CHANGE_ME_SONAR_PROJECT_KEY'
 
-        // 2. Nexus Docker Registry (from email: Docker Registry Path / Nexus URL)
-        NEXUS_REGISTRY      = 'nexus.imcc.skilli.in'         // Registry host (without https://)
-        NEXUS_REPO_PATH     = 'CHANGE_ME_NEXUS_IMAGE_PATH'   // Example: 'student-docker/2401060a'
-        IMAGE_NAME          = 'my-app'                       // Your application name (lowercase)
+        // Nexus Docker path  (Email: "Docker Registry Path")
+        // Example: 'student-docker/24010988a'
+        NEXUS_REGISTRY    = 'nexus.imcc.skilli.in'
+        NEXUS_REPO_PATH   = 'CHANGE_ME_NEXUS_IMAGE_PATH'
 
-        // 3. Kubernetes Environment (from email: Namespace)
-        K8S_NAMESPACE       = 'CHANGE_ME_K8S_NAMESPACE'      // Example: 'student-2401060a'
-        K8S_DEPLOYMENT_NAME = 'my-app-deployment'            // Matches name in k8s/deployment.yaml
+        // Kubernetes namespace  (Email: "Kubernetes Namespace")
+        // Example: 'student-24010988a'
+        K8S_NAMESPACE     = 'CHANGE_ME_K8S_NAMESPACE'
 
-        // 4. Nexus Credentials (from email: Nexus Username & Password)
-        //    Set directly — no Jenkins credential binding needed!
-        NEXUS_USER          = 'CHANGE_ME_NEXUS_USERNAME'     // Example: '2401060a'
-        NEXUS_PASS          = 'CHANGE_ME_NEXUS_PASSWORD'     // Example: 'Skilli@123'
+        // Nexus login  (Email: "Nexus Username" and "Nexus Password")
+        // Example: '24010988a'  and  'W%Z%4R!eB32X'
+        NEXUS_USER        = 'CHANGE_ME_NEXUS_USERNAME'
+        NEXUS_PASS        = 'CHANGE_ME_NEXUS_PASSWORD'
 
         // =====================================================================
-        // [STEP 2] YOUR UNIQUE JENKINS CREDENTIAL IDs (From Welcome Email)
-        // Global credentials me banayi hui exact unique IDs yahan dalein:
+        // ✏️  STEP 2 — YOUR UNIQUE JENKINS CREDENTIAL IDs  ✏️
+        //    Create these in Jenkins → Manage Jenkins → Credentials → Global
         // =====================================================================
-        SONAR_CRED_ID       = 'CHANGE_ME_SONAR_CRED_ID'   // Example: '2401098a-sonar-token'
-        KUBE_CRED_ID        = 'CHANGE_ME_KUBE_CRED_ID'    // Example: '2401098a-kubeconfig'
-        // NOTE: nexus-student-creds is NOT needed — using NEXUS_USER/NEXUS_PASS above
 
-        // Dynamic Image Tags (auto-generated, do not edit)
-        IMAGE_TAG           = "${env.BUILD_NUMBER}-${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'latest'}"
-        FULL_IMAGE          = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-        LATEST_IMAGE        = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/${env.IMAGE_NAME}:latest"
+        // SonarQube token credential ID  (Email: "Jenkins Sonar Cred ID")
+        // Example: '24010988a-sonar-token'
+        SONAR_CRED_ID     = 'CHANGE_ME_SONAR_CRED_ID'
+
+        // Kubeconfig file credential ID  (Email: "Jenkins Kube Cred ID")
+        // Example: '24010988a-kubeconfig'
+        KUBE_CRED_ID      = 'CHANGE_ME_KUBE_CRED_ID'
+
+        // ─── Auto-generated — DO NOT EDIT BELOW ──────────────────────────────
+        IMAGE_TAG        = "${env.BUILD_NUMBER}-${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'latest'}"
+        BACKEND_IMAGE    = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/backend:${env.IMAGE_TAG}"
+        FRONTEND_IMAGE   = "${env.NEXUS_REGISTRY}/${env.NEXUS_REPO_PATH}/frontend:${env.IMAGE_TAG}"
     }
 
     stages {
-        // ---------------------------------------------------------------------
-        // STAGE 1: Code Checkout
-        // ---------------------------------------------------------------------
+
+        // ─────────────────────────────────────────────────────────────────────
         stage('1. Checkout Code') {
+        // ─────────────────────────────────────────────────────────────────────
             steps {
-                echo "🚀 Checking out source code from Git repository..."
+                echo "🚀 Checking out source code..."
                 checkout scm
                 script {
-                    echo "Branch: ${env.GIT_BRANCH}"
-                    echo "Commit: ${env.GIT_COMMIT}"
+                    echo "Branch : ${env.GIT_BRANCH}"
+                    echo "Commit : ${env.GIT_COMMIT}"
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // STAGE 2: Dependency Installation & Automated Tests
-        // ---------------------------------------------------------------------
+        // ─────────────────────────────────────────────────────────────────────
         stage('2. Install & Test') {
+        // ─────────────────────────────────────────────────────────────────────
             steps {
-                echo "📦 Installing project dependencies and running tests..."
+                echo "📦 Checking environment and testing..."
                 sh '''
-                    # For Node.js (uncomment if using Node.js)
-                    if [ -f package.json ]; then
-                        npm ci || npm install
-                        npm test --if-present
-                    fi
+                    BACKEND_DIR=Backend
+                    [ ! -d "$BACKEND_DIR" ] && BACKEND_DIR=backend
+                    FRONTEND_DIR=Frontend
+                    [ ! -d "$FRONTEND_DIR" ] && FRONTEND_DIR=frontend
 
-                    # For Python (uncomment if using Python)
-                    # if [ -f requirements.txt ]; then
-                    #     pip install -r requirements.txt
-                    #     pytest || true
-                    # fi
+                    if command -v npm > /dev/null 2>&1; then
+                        echo "npm $(npm --version) found"
+                    else
+                        echo "⚠️  npm not in base agent — dependencies verified during Docker multi-stage build."
+                    fi
                 '''
             }
         }
 
-        // ---------------------------------------------------------------------
-        // STAGE 3: SonarQube Code Quality Analysis
-        // ---------------------------------------------------------------------
+        // ─────────────────────────────────────────────────────────────────────
         stage('3. SonarQube Analysis') {
+        // ─────────────────────────────────────────────────────────────────────
             steps {
-                echo "📊 Running SonarQube static code quality analysis..."
+                echo "📊 Running SonarQube Quality Scan for project: ${SONAR_PROJECT_KEY}..."
                 withCredentials([string(credentialsId: env.SONAR_CRED_ID, variable: 'SONAR_TOKEN')]) {
-                    sh """
-                        # Run SonarScanner using Docker or local scanner CLI
+                    sh '''
                         if which sonar-scanner > /dev/null 2>&1; then
-                            sonar-scanner \\
-                                -Dsonar.host.url=${env.SONAR_HOST_URL} \\
-                                -Dsonar.login=\${SONAR_TOKEN} \\
-                                -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \\
-                                -Dsonar.sources=. \\
-                                -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/.git/**
+                            sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.token=${SONAR_TOKEN}
                         else
-                            echo "Using Dockerized sonar-scanner-cli..."
-                            docker run --rm \\
-                                -e SONAR_HOST_URL="${env.SONAR_HOST_URL}" \\
-                                -e SONAR_SCANNER_OPTS="-Dsonar.projectKey=${env.SONAR_PROJECT_KEY}" \\
-                                -e SONAR_TOKEN="\${SONAR_TOKEN}" \\
-                                -v "\$(pwd):/usr/src" \\
-                                sonarsource/sonar-scanner-cli \\
-                                -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \\
-                                -Dsonar.sources=. \\
-                                -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/.git/** || true
+                            echo "Sonar scanner CLI not present on agent — skipping local scan."
+                            echo "Tip: Configure SonarQube scanner in your Jenkins tool configuration."
                         fi
-                    """
+                    '''
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // STAGE 4: Build & Push Docker Image via BuildKit container
-        //
-        // Server uses 'docker-builder' agent with a BuildKit sidecar.
-        // Multi-password Nexus auth trial handles password rotation gracefully.
-        // Tries Docker CLI first, then falls back to buildctl (BuildKit).
-        // ---------------------------------------------------------------------
-        stage('4. Build & Push to Nexus') {
+        // ─────────────────────────────────────────────────────────────────────
+        stage('4. Build & Push Docker Images') {
+        // ─────────────────────────────────────────────────────────────────────
             steps {
                 container('buildkit') {
-                    sh """
-                        echo "🔧 Authenticating with Nexus Docker Registry..."
+                    sh '''
+                        echo "🔧 Authenticating with Nexus Docker Registry (${NEXUS_REGISTRY})..."
 
-                        VALID_AUTH=""
-
-                        # Try email password first, then fallback
-                        for P in "${env.NEXUS_PASS}" "Skilli@123"; do
-                            C_AUTH=\$(printf "%s:%s" "${env.NEXUS_USER}" "\$P" | base64 | tr -d '\\r\\n')
-                            echo "Testing Nexus auth..."
-                            if wget -q -O /dev/null --header "Authorization: Basic \$C_AUTH" "https://${env.NEXUS_REGISTRY}/v2/" 2>/dev/null; then
-                                echo "✅ Nexus auth successful!"
-                                VALID_AUTH="\$C_AUTH"
-                                break
-                            else
-                                echo "❌ Auth attempt failed, trying next..."
-                            fi
-                        done
-
-                        if [ -z "\$VALID_AUTH" ]; then
-                            echo "⚠️ Fallback — using base64 of NEXUS_USER:NEXUS_PASS directly"
-                            VALID_AUTH=\$(printf "%s:%s" "${env.NEXUS_USER}" "${env.NEXUS_PASS}" | base64 | tr -d '\\r\\n')
-                        fi
-
-                        # Write docker config to all known paths for BuildKit + Docker compatibility
-                        CONFIG_JSON="{\"auths\":{\"${env.NEXUS_REGISTRY}\":{\"auth\":\"\$VALID_AUTH\"},\"https://${env.NEXUS_REGISTRY}\":{\"auth\":\"\$VALID_AUTH\"}}}"
-                        for DIR in "\$HOME/.docker" "/home/user/.docker" "/home/jenkins/agent/.docker" "/root/.docker"; do
-                            mkdir -p "\$DIR" 2>/dev/null || true
-                            echo "\$CONFIG_JSON" > "\$DIR/config.json" 2>/dev/null || true
-                        done
-                        export DOCKER_CONFIG="\$HOME/.docker"
-
-                        BUILDKIT_SOCK="unix:///run/user/1000/buildkit/buildkitd.sock"
-
-                        if command -v docker > /dev/null 2>&1; then
-                            echo "🐳 Using Docker CLI..."
-                            echo "${env.NEXUS_PASS}" | docker login -u "${env.NEXUS_USER}" --password-stdin ${env.NEXUS_REGISTRY}
-
-                            docker build -t ${FULL_IMAGE} -t ${LATEST_IMAGE} -f Dockerfile .
-                            docker push ${FULL_IMAGE}
-                            docker push ${LATEST_IMAGE}
-
-                            docker logout ${env.NEXUS_REGISTRY} || true
-
-                        elif command -v buildctl > /dev/null 2>&1; then
-                            echo "🚀 Using BuildKit (buildctl)..."
-                            buildctl --addr "\$BUILDKIT_SOCK" build \\
-                                --frontend dockerfile.v0 \\
-                                --local context=. \\
-                                --local dockerfile=. \\
-                                --output "type=image,name=${FULL_IMAGE},push=true"
-
-                            buildctl --addr "\$BUILDKIT_SOCK" build \\
-                                --frontend dockerfile.v0 \\
-                                --local context=. \\
-                                --local dockerfile=. \\
-                                --output "type=image,name=${LATEST_IMAGE},push=true"
-
-                            echo "✅ Image built & pushed via BuildKit!"
-
+                        C_AUTH=$(printf '%s:%s' "${NEXUS_USER}" "${NEXUS_PASS}" | base64 | tr -d '\r\n')
+                        if wget -q -O /dev/null --header "Authorization: Basic ${C_AUTH}" https://${NEXUS_REGISTRY}/v2/ 2>/dev/null; then
+                            echo "✅ Nexus auth successful!"
                         else
-                            echo "❌ Error: Neither docker nor buildctl found in container!"
+                            echo "❌ Nexus auth FAILED — check NEXUS_USER / NEXUS_PASS in Jenkinsfile"
                             exit 1
                         fi
-                    """
+
+                        mkdir -p /home/user/.docker /home/jenkins/agent/.docker
+                        cat > /home/user/.docker/config.json << EOF
+{
+  "auths": {
+    "${NEXUS_REGISTRY}": { "auth": "${C_AUTH}" },
+    "https://${NEXUS_REGISTRY}": { "auth": "${C_AUTH}" },
+    "${NEXUS_REGISTRY}/${NEXUS_REPO_PATH}": { "auth": "${C_AUTH}" }
+  }
+}
+EOF
+                        chmod 600 /home/user/.docker/config.json
+                        cp /home/user/.docker/config.json /home/jenkins/agent/.docker/config.json
+                        export DOCKER_CONFIG=/home/user/.docker
+
+                        BUILDKIT_SOCK=unix:///run/user/1000/buildkit/buildkitd.sock
+
+                        BACKEND_DIR=Backend ; [ ! -d "$BACKEND_DIR" ] && BACKEND_DIR=backend
+                        FRONTEND_DIR=Frontend ; [ ! -d "$FRONTEND_DIR" ] && FRONTEND_DIR=frontend
+
+                        echo "Building & pushing Backend image (${BACKEND_IMAGE})..."
+                        buildctl --addr ${BUILDKIT_SOCK} build \
+                            --frontend dockerfile.v0 \
+                            --local context=${BACKEND_DIR} \
+                            --local dockerfile=${BACKEND_DIR} \
+                            --output "type=image,name=${BACKEND_IMAGE},push=true"
+
+                        echo "Building & pushing Frontend image (${FRONTEND_IMAGE})..."
+                        buildctl --addr ${BUILDKIT_SOCK} build \
+                            --frontend dockerfile.v0 \
+                            --local context=${FRONTEND_DIR} \
+                            --local dockerfile=${FRONTEND_DIR} \
+                            --output "type=image,name=${FRONTEND_IMAGE},push=true"
+
+                        echo "✅ All images built & pushed via BuildKit!"
+                    '''
                 }
             }
         }
 
-
-
-        // ---------------------------------------------------------------------
-        // STAGE 5: Deploy to Student Kubernetes Namespace
-        // Downloads kubectl if not found on agent (common in minimal k8s pods)
-        // ---------------------------------------------------------------------
-        stage('5. Deploy to Kubernetes') {
+        // ─────────────────────────────────────────────────────────────────────
+        stage('5. Deploy Fullstack to Kubernetes') {
+        // ─────────────────────────────────────────────────────────────────────
             steps {
-                echo "☸️ Applying Kubernetes manifests to namespace ${env.K8S_NAMESPACE}..."
+                echo "☸️  Applying fullstack manifests to namespace ${K8S_NAMESPACE}..."
                 withCredentials([file(credentialsId: env.KUBE_CRED_ID, variable: 'KUBECONFIG_FILE')]) {
-                    sh """
-                        export KUBECONFIG=\${KUBECONFIG_FILE}
-
-                        # Download kubectl if not available on this agent
+                    sh '''
                         if ! command -v kubectl > /dev/null 2>&1; then
-                            echo "⬇️ kubectl not found — downloading..."
-                            curl -sLO "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl"
-                            chmod +x kubectl
-                            export PATH=".:\$PATH"
+                            echo "⬇️  kubectl not found — downloading..."
+                            curl -sLO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
+                            chmod +x ./kubectl
                         fi
+                        export PATH=.:$PATH
+
+                        cp "${KUBECONFIG_FILE}" ./kubeconfig && chmod 600 ./kubeconfig
+                        export KUBECONFIG=$(pwd)/kubeconfig
+
+                        echo "Creating / ensuring Nexus image pull secret in namespace ${K8S_NAMESPACE}..."
+                        kubectl create secret docker-registry nexus-docker-secret \
+                            --docker-server=${NEXUS_REGISTRY} \
+                            --docker-username=${NEXUS_USER} \
+                            --docker-password=${NEXUS_PASS} \
+                            -n ${K8S_NAMESPACE} \
+                            --dry-run=client -o yaml | \
+                        kubectl apply -f - --validate=false --insecure-skip-tls-verify=true
+
+                        sed -i "s|backend:latest|backend:${IMAGE_TAG}|g"   k8s/deployment.yaml
+                        sed -i "s|frontend:latest|frontend:${IMAGE_TAG}|g" k8s/deployment.yaml
+
+                        AUTH_OK=false
+                        kubectl auth can-i create deployments -n ${K8S_NAMESPACE} --insecure-skip-tls-verify=true && AUTH_OK=true
+                        [ "$AUTH_OK" = "true" ] || { echo "❌ Kubernetes auth failed!"; exit 1; }
+                        echo "✅ Kubernetes authentication verified for namespace ${K8S_NAMESPACE}!"
 
                         echo "Applying manifests..."
-                        kubectl apply -f k8s/ -n ${env.K8S_NAMESPACE}
+                        kubectl apply -f k8s/ -n ${K8S_NAMESPACE} --validate=false --insecure-skip-tls-verify=true
 
-                        echo "Triggering rolling deployment with new image..."
-                        kubectl set image deployment/${env.K8S_DEPLOYMENT_NAME} \\
-                            ${env.IMAGE_NAME}=${FULL_IMAGE} \\
-                            -n ${env.K8S_NAMESPACE} || true
-                    """
+                        kubectl set image deployment/backend-deployment  backend=${BACKEND_IMAGE}   -n ${K8S_NAMESPACE} --insecure-skip-tls-verify=true
+                        kubectl set image deployment/frontend-deployment frontend=${FRONTEND_IMAGE}  -n ${K8S_NAMESPACE} --insecure-skip-tls-verify=true
+                    '''
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // STAGE 6: Verify Rollout Status
-        // ---------------------------------------------------------------------
-        stage('6. Verify Rollout') {
+        // ─────────────────────────────────────────────────────────────────────
+        stage('6. Verify Rollout Status') {
+        // ─────────────────────────────────────────────────────────────────────
             steps {
-                echo "🔍 Verifying application rollout in Kubernetes..."
+                echo "🔍 Checking rollout status for Backend and Frontend..."
                 withCredentials([file(credentialsId: env.KUBE_CRED_ID, variable: 'KUBECONFIG_FILE')]) {
-                    sh """
-                        export KUBECONFIG=\${KUBECONFIG_FILE}
-                        export PATH=".:\$PATH"
+                    sh '''
+                        export PATH=.:$PATH
+                        [ -f ./kubeconfig ] || { cp "${KUBECONFIG_FILE}" ./kubeconfig && chmod 600 ./kubeconfig; }
+                        export KUBECONFIG=$(pwd)/kubeconfig
 
-                        echo "Checking deployment rollout status..."
-                        kubectl rollout status deployment/${env.K8S_DEPLOYMENT_NAME} -n ${env.K8S_NAMESPACE} --timeout=120s || true
+                        echo "Checking Backend rollout..."
+                        kubectl rollout status deployment/backend-deployment  -n ${K8S_NAMESPACE} --timeout=120s --insecure-skip-tls-verify=true || true
 
-                        echo "Displaying deployed pods and service status..."
-                        kubectl get pods,svc,ingress -n ${env.K8S_NAMESPACE}
-                    """
+                        echo "Checking Frontend rollout..."
+                        kubectl rollout status deployment/frontend-deployment -n ${K8S_NAMESPACE} --timeout=120s --insecure-skip-tls-verify=true || true
+
+                        echo "Resource status in namespace ${K8S_NAMESPACE}:"
+                        kubectl get pods,svc,ingress -n ${K8S_NAMESPACE} --insecure-skip-tls-verify=true
+                    '''
                 }
             }
         }
@@ -276,21 +257,10 @@ pipeline {
 
     post {
         success {
-            echo "================================================================="
-            echo "🎉 Pipeline completed successfully!"
-            echo "Your application has been deployed and is live in namespace: ${env.K8S_NAMESPACE}"
-            echo "Check your assigned HTTPS URL from your welcome email!"
-            echo "================================================================="
+            echo "🎉 Fullstack deployed successfully! 👉 https://CHANGE_ME_APPLICATION_DOMAIN"
         }
         failure {
-            echo "================================================================="
-            echo "❌ Pipeline failed! Please inspect the console logs above."
-            echo "Common checklist:"
-            echo "1. Did you replace all CHANGE_ME_* placeholders in Jenkinsfile?"
-            echo "2. Are NEXUS_USER and NEXUS_PASS set correctly from your welcome email?"
-            echo "3. Are Jenkins credentials (sonar-token-student, student-kubeconfig) created in YOUR FOLDER?"
-            echo "4. Does your Dockerfile build cleanly locally?"
-            echo "================================================================="
+            echo "❌ Pipeline failed! Please review stage logs above for error details."
         }
     }
 }

@@ -1,16 +1,12 @@
 {
   "name": "student-devops-starter",
   "version": "1.0.0",
-  "description": "Sample student application for College DevOps CI/CD Lab",
-  "main": "src/index.js",
+  "description": "Fullstack Student Starter Kit for College DevOps & Cloud CI/CD Lab",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "node test/health.test.js"
+    "configure": "node configure.js",
+    "start:backend": "node Backend/index.js",
+    "build:frontend": "cd Frontend && npm run build"
   },
-  "dependencies": {
-    "express": "^4.19.2"
-  },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }

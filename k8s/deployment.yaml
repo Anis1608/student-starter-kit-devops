@@ -1,73 +1,178 @@
+# ==============================================================================
+# Skilli DevOps Lab — Fullstack Multi-Tier Kubernetes Manifests
+# Tier 1: Backend API (Node.js / Python / any server)
+# Tier 2: Frontend UI  (React / Vue / Angular / static HTML)
+#
+# ✏️  REPLACE ALL "CHANGE_ME_" PLACEHOLDERS WITH YOUR ACTUAL VALUES
+#    (from your Welcome Email sent by Admin Panel)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. BACKEND API DEPLOYMENT
+# ------------------------------------------------------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app-deployment
-  # ===========================================================================
-  # REPLACE WITH YOUR NAMESPACE FROM WELCOME EMAIL (e.g., student-mca-2401060)
-  # ===========================================================================
+  name: backend-deployment
+  # ✏️ Your Kubernetes namespace (Email: "Kubernetes Namespace")
+  # Example: student-24010988a
   namespace: CHANGE_ME_K8S_NAMESPACE
   labels:
-    app: my-app
-    tier: frontend
+    # ✏️ Replace 'my-app' with your app name (lowercase, no spaces)
+    app: CHANGE_ME_APP_NAME
+    tier: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: my-app
+      app: CHANGE_ME_APP_NAME
+      tier: backend
   template:
     metadata:
       labels:
-        app: my-app
+        app: CHANGE_ME_APP_NAME
+        tier: backend
     spec:
-      # Optional: If pulling from private Nexus requires credentials in your namespace,
-      # reference your secret here (usually pre-configured by admin or created via kubectl):
-      # imagePullSecrets:
-      #   - name: nexus-docker-secret
+      imagePullSecrets:
+        - name: nexus-docker-secret   # Auto-created by Jenkins pipeline
       containers:
-        - name: my-app
-          # ===================================================================
-          # Jenkinsfile will automatically replace this with the built image tag.
-          # Format: <nexus-registry>/<student-path>/<image-name>:<tag>
-          # Example: nexus.imcc.skilli.in/student-docker/mca-2401060/my-app:latest
-          # ===================================================================
-          image: CHANGE_ME_NEXUS_REGISTRY/CHANGE_ME_NEXUS_IMAGE_PATH/my-app:latest
+        - name: backend
+          # ✏️ Image path (Email: "Docker Registry Path") — Jenkins replaces :latest tag automatically
+          # Example: nexus.imcc.skilli.in/student-docker/24010988a/backend:latest
+          image: nexus.imcc.skilli.in/CHANGE_ME_NEXUS_IMAGE_PATH/backend:latest
           imagePullPolicy: Always
           ports:
-            # Must match the port your application listens on
-            - containerPort: 3000
+            - containerPort: 5000     # ✏️ Change if your backend runs on a different port
               name: http
           env:
             - name: NODE_ENV
               value: "production"
             - name: PORT
-              value: "3000"
-          
-          # ===================================================================
-          # Resource requests and limits MUST stay within your student quota:
-          # CPU Limit max: 500m, Memory Limit max: 512Mi
-          # ===================================================================
+              value: "5000"           # ✏️ Match with containerPort above
+
+            # ✏️ ADD YOUR APP-SPECIFIC ENVIRONMENT VARIABLES BELOW
+            # These will be injected into the container at runtime.
+            # Common examples:
+            - name: MONGO_URI
+              value: "CHANGE_ME_MONGODB_CONNECTION_STRING"
+              # Example: "mongodb+srv://user:pass@cluster0.abc123.mongodb.net/mydb?retryWrites=true&w=majority"
+            - name: JWT_SECRET
+              value: "CHANGE_ME_JWT_SECRET"
+              # Example: "my-super-secret-key-2024"
+
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 50m
+              memory: 64Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
-
-          # Health checks ensuring Kubernetes restarts unhealthy pods
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /health   # ✏️ Change to your health-check endpoint (or remove if you don't have one)
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 3000
+              port: 5000
             initialDelaySeconds: 15
             periodSeconds: 20
-            timeoutSeconds: 3
-            failureThreshold: 3
+---
+# ------------------------------------------------------------------------------
+# 2. BACKEND CLUSTERIP SERVICE
+#    Internal DNS: http://backend-service:5000
+#    Frontend calls this as: http://backend-service:5000/api/...
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: CHANGE_ME_K8S_NAMESPACE   # ✏️ Same as above
+  labels:
+    app: CHANGE_ME_APP_NAME
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: CHANGE_ME_APP_NAME
+    tier: backend
+  ports:
+    - name: http
+      port: 5000       # ✏️ Match with containerPort
+      targetPort: 5000
+---
+# ------------------------------------------------------------------------------
+# 3. FRONTEND UI DEPLOYMENT
+# ------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: CHANGE_ME_K8S_NAMESPACE   # ✏️ Same as above
+  labels:
+    app: CHANGE_ME_APP_NAME
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: CHANGE_ME_APP_NAME
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: CHANGE_ME_APP_NAME
+        tier: frontend
+    spec:
+      imagePullSecrets:
+        - name: nexus-docker-secret
+      containers:
+        - name: frontend
+          # ✏️ Image path — Jenkins replaces :latest tag automatically
+          image: nexus.imcc.skilli.in/CHANGE_ME_NEXUS_IMAGE_PATH/frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80    # nginx serves on 80 (keep this)
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
           readinessProbe:
             httpGet:
-              path: /health
-              port: 3000
+              path: /
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+# ------------------------------------------------------------------------------
+# 4. FRONTEND CLUSTERIP SERVICE
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: CHANGE_ME_K8S_NAMESPACE   # ✏️ Same as above
+  labels:
+    app: CHANGE_ME_APP_NAME
+    tier: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: CHANGE_ME_APP_NAME
+    tier: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

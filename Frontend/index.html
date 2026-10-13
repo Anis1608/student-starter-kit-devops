@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skilli DevOps & Cloud Lab — Fullstack Application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 20% 20%, #1e1b4b 0%, #09090b 100%);
+      --card-bg: rgba(24, 24, 27, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #09090b;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.18) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.15) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #c7d2fe;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #22c55e;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+    }
+
+    h1 {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      align-self: flex-start;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .interactive-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 28px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .code-box {
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      overflow-x: auto;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .info-label {
+      color: var(--text-muted);
+    }
+
+    .info-val {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: #f1f5f9;
+    }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">
+        <span class="status-dot"></span>
+        Skilli Cloud & DevOps Lab
+      </div>
+      <h1>Fullstack Student Template</h1>
+      <p class="subtitle">
+        Aapka application Kubernetes cluster par successfully deploy ho gaya hai! Neeche diye gaye button se live backend connect verify karein.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- Frontend Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⚡</div>
+          <div>
+            <div class="card-title">Frontend Tier</div>
+            <div class="card-subtitle">Nginx + Vite SPA</div>
+          </div>
+        </div>
+        <span class="pill">Port 80 • Operational</span>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Host</span>
+            <span class="info-val" id="frontend-host">window.location.host</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Protocol</span>
+            <span class="info-val">HTTPS (TLS Managed)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⚙️</div>
+          <div>
+            <div class="card-title">Backend API Tier</div>
+            <div class="card-subtitle">Express.js Container</div>
+          </div>
+        </div>
+        <span class="pill" id="backend-status-pill">Port 5000 • Ingress /api</span>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Internal Route</span>
+            <span class="info-val">backend-service:5000</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Public Route</span>
+            <span class="info-val">/api/health</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Test Card -->
+    <div class="interactive-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 700;">Live Backend Health Check</h2>
+          <p style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">
+            Test same-origin reverse-proxy call to <code>/api/health</code> via Kubernetes Ingress.
+          </p>
+        </div>
+        <button class="btn" id="test-btn" onclick="testBackend()">
+          <span>🚀 Test API Connection</span>
+        </button>
+      </div>
+
+      <div class="code-box" id="result-box">
+        Click "Test API Connection" to fetch live backend response...
+      </div>
+    </div>
+
+    <footer>
+      Skilli College DevOps Platform • Built for Anis & MCA Batch Students
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('frontend-host').innerText = window.location.host || 'localhost';
+
+    async function testBackend() {
+      const box = document.getElementById('result-box');
+      const btn = document.getElementById('test-btn');
+      btn.disabled = true;
+      box.innerText = '📡 Connecting to /api/health...';
+
+      const startTime = performance.now();
+      try {
+        const res = await fetch('/api/health');
+        const latency = Math.round(performance.now() - startTime);
+        const data = await res.json();
+
+        box.innerHTML = `<span style="color: #4ade80;">HTTP ${res.status} OK</span> (${latency}ms latency)\n\n` + 
+                         JSON.stringify(data, null, 2);
+        
+        document.getElementById('backend-status-pill').innerText = 'Connected (' + latency + 'ms)';
+        document.getElementById('backend-status-pill').style.color = '#4ade80';
+      } catch (err) {
+        const latency = Math.round(performance.now() - startTime);
+        box.innerHTML = `<span style="color: #ef4444;">Error fetching /api/health:</span>\n${err.message}\n\n(Tip: Ensure backend-deployment is running and ingress has /api rule configured)`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Auto-test once on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(testBackend, 800);
+    });
+  </script>
+</body>
+</html>

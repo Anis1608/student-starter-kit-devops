@@ -1,225 +1,226 @@
 # 🚀 College DevOps & Cloud Lab — Student Starter Kit
 
-Welcome to the **College DevOps & Cloud Lab**!  
-Yeh folder students ke liye banaya gaya complete sample template hai jisme aap apne welcome email ke credentials aur project details fill karke apna CI/CD pipeline automate kar sakte hain.
+> **Ye starter kit Anis ke `Ajay-Traders` jaise fullstack web applications ko deploy karne ke liye design kiya gaya hai.**  
+> Isme Backend (Node/Express), Frontend (React/Vite/Nginx), Kubernetes Manifests, aur Jenkins CI/CD Pipeline sab kuch pre-configured hai.
 
 ---
 
-## 📋 Architecture & Pipeline Flow
-Aapka code is flow ke through automated deploy hoga:
+## ⚡ Quick Start — Kaise Use Karein? (2 Simple Tareeqe)
+
+Student chahe kisi bhi situation mein ho, **sirf 1 command** se uska poora project configure ho jata hai:
+
 ```
-GitHub (Code Push)
-   ⬇
-Jenkins (Pulls Repo & Runs Tests)
-   ⬇
-SonarQube (Static Code Analysis & Quality Gate)
-   ⬇
-Docker (Container Image Build)
-   ⬇
-Nexus (Pushes Image to Private Container Registry)
-   ⬇
-Kubernetes (Deploys Pods in Your Isolated Namespace)
-   ⬇
-Live HTTPS URL (https://<rollno>.imcc.skilli.in)
+                  ┌──────────────────────────────────────────────┐
+                  │   Do You Have An Existing Project?           │
+                  └───────────────┬──────────────────────────────┘
+                                  │
+               ┌──────────────────┴──────────────────┐
+               ▼ YES                                 ▼ NO
+       [ METHOD 1 ]                                  [ METHOD 2 ]
+  Aapka project pehle se bana hai               Naya project start kar rahe ho
+  (Backend + Frontend folders hain)             (Starter kit se start karo)
+               │                                             │
+  Sirf configure.js copy karo                   Starter Kit clone karo
+  apne project ke root mein                     aur code paste karo
+               │                                             │
+               └──────────────┬──────────────────────────────┘
+                              │
+                              ▼ Run Command
+                      node configure.js
+                              │
+               ┌──────────────┴──────────────────────────────┐
+               ▼                                             ▼
+  • Missing files auto-generate hogi:            • Saare CHANGE_ME_ values
+    - Backend/Dockerfile                           automatically aapke email
+    - Frontend/Dockerfile + nginx.conf             details se replace honge!
+    - k8s/deployment.yaml + ingress.yaml
+    - Jenkinsfile + sonar.properties + .gitignore
 ```
 
 ---
 
-## 📁 Starter Kit Files Overview
+### 🟢 METHOD 1: Agar Aapka Project Pehle Se Bana Hua Hai (Super Easy 🌟)
 
-| File | Purpose | Kaha Edit Karna Hai? |
-| :--- | :--- | :--- |
-| `Jenkinsfile` | 7-Stage Declarative Pipeline | `CHANGE_ME_*` placeholders at the top |
-| `Dockerfile` | Multi-stage production container build | Change stack (Node.js/Python) if needed |
-| `.dockerignore` | Excludes secrets, `.git`, `node_modules` | No changes needed |
-| `sonar-project.properties` | SonarQube scanner properties | Replace `CHANGE_ME_SONAR_PROJECT_KEY` |
-| `k8s/deployment.yaml` | Kubernetes Deployment manifest | Replace `CHANGE_ME_K8S_NAMESPACE` |
-| `k8s/service.yaml` | Kubernetes ClusterIP Service | Replace `CHANGE_ME_K8S_NAMESPACE` |
-| `k8s/ingress.yaml` | Kubernetes Ingress (Domain & TLS) | Replace `CHANGE_ME_APPLICATION_DOMAIN` & Namespace |
-| `src/index.js` | Sample working Node.js/Express app | Replace with your actual project source |
-| `package.json` | Project dependencies & test script | Add your project dependencies |
+Maan lo aapke laptop par pehle se project folder hai:
+```
+My-College-Project/
+├── Backend/     (sirf code hai, koi Dockerfile nahi)
+└── Frontend/    (sirf code hai, koi Dockerfile/nginx nahi)
+```
 
----
-
-## 🔑 Email Values Mapping Table (Aapko Kaha Kya Bharna Hai)
-
-Aapko mile Welcome Email ke values ko files me is tarah replace karein:
-
-| Placeholder in Files | Welcome Email Field | Example Value |
-| :--- | :--- | :--- |
-| `CHANGE_ME_SONAR_PROJECT_KEY` | **SonarQube Project Key** | `mca-2401060-project` |
-| `CHANGE_ME_NEXUS_IMAGE_PATH` | **Docker Registry Path** | `student-docker/mca-2401060` |
-| `CHANGE_ME_K8S_NAMESPACE` | **Kubernetes Namespace** | `student-mca-2401060` |
-| `CHANGE_ME_APPLICATION_DOMAIN` | **Live Application Domain** | `mca-2401060.imcc.skilli.in` |
-
----
-
-## 🛠️ Step-by-Step Setup Guide
-
-### STEP 1: Apne GitHub Repository Me Files Daalein
-1. Apne GitHub par naya repository banayein (e.g. `devops-college-project`).
-2. Is `student-starter-kit` ke saare files ko apne repository me copy karein:
+1. Is starter-kit se sirf **`configure.js`** file ko apne project folder ke root mein copy karo.
+2. Terminal mein run karo:
    ```bash
-   git init
-   git add .
-   git commit -m "feat: initial commit with DevOps starter kit"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo>.git
-   git push -u origin main
+   node configure.js
    ```
-3. `Jenkinsfile`, `sonar-project.properties`, aur `k8s/*.yaml` me apne placeholders (`CHANGE_ME_*`) replace karke push karein.
+3. Script aapse **Roll Number**, **Nexus Password**, aur **Sonar Token** poochhegi.
+4. **Boom! 🪄 Script automatically ye sab create kar degi:**
+   - ✅ `Backend/Dockerfile` (Node.js production image, port 5000, non-root user)
+   - ✅ `Frontend/Dockerfile` (Vite/React multi-stage image + Nginx runner, port 80)
+   - ✅ `Frontend/nginx.conf` (SPA routing, gzip compression, asset caching)
+   - ✅ `k8s/deployment.yaml` (Backend + Frontend Deployments aur Services)
+   - ✅ `k8s/ingress.yaml` (Zero-CORS routing: `/api` -> backend, `/` -> frontend)
+   - ✅ `Jenkinsfile` (BuildKit + Nexus Registry push + Kubernetes auto-deploy)
+   - ✅ `sonar-project.properties` (SonarQube code scan configuration)
+   - ✅ `.gitignore` (Secrets leak hone se bachane ke liye)
 
 ---
 
-### STEP 2: Jenkins Me Apni Unique Credentials Create Karein
+### 🔵 METHOD 2: Agar Aap Starter Kit Ko Base Bana Rahe Ho
 
-> 💡 **Zero Overlap Guaranteed!**
-> Har student ko unke roll number se prefixed unique credential IDs mili hain (e.g. `2401098a-sonar-token`).
-> Isliye Jenkins me credentials banate waqt kisi doosre student ke credentials se kabhi koi conflict ya overlap nahi hoga!
+1. Is repository ko clone karo ya download karo.
+2. Apna backend code `Backend/` folder mein daalo aur frontend code `Frontend/` folder mein daalo.
+3. Terminal mein run karo:
+   ```bash
+   node configure.js
+   ```
+4. Apni details enter karo → Saare placeholders automatically replace ho jayenge!
 
-Steps:
-1. Jenkins open karein: 👉 **https://jenkins.imcc.skilli.in**
-2. Login karein (email me mila username/password use karein)
-3. Jenkins me jayein: **Manage Jenkins** ➔ **Credentials** ➔ **System** ➔ **Global credentials (unrestricted)** ➔ **Add Credentials**
-   *(Ya dashboard ke left menu me **Credentials** ➔ **Global credentials** ➔ **Add Credentials** click karein)*
+---
 
-#### 1️⃣ SonarQube Token Credential:
+## 🔒 Security & Environment Variables (.env Leak Se Bachna)
+
+> ⚠️ **IMPORTANT SECURITY RULE:**  
+> Kabhi bhi apna MongoDB password, JWT secret ya API keys `docker-compose.yml` ya `k8s/deployment.yaml` mein hardcode karke GitHub par push **mat karein**!
+
+### Sahi Tareeka:
+1. `Backend/` folder ke andar ek template file hai: **`Backend/.env.example`**
+2. Uski copy banakar naam rakhein: **`Backend/.env`**
+3. Usme apna real MongoDB connection string daalein:
+   ```env
+   PORT=5000
+   NODE_ENV=development
+   MONGO_URI=mongodb+srv://user:password@cluster0.abc.mongodb.net/mydb
+   JWT_SECRET=supersecret123
+   ```
+4. Root par [.gitignore](file:///c:/Users/userm/Desktop/ADMIN_PANEL/student-starter-kit/.gitignore) laga hua hai, jo `.env` file ko **kabhi bhi GitHub par push nahi hone dega**.
+
+---
+
+## 🔑 Kaunse Values Kahan Se Aate Hain? (Email Mapping)
+
+Admin Panel se mile Welcome Email ke hisaab se values map hoti hain:
+
+| Placeholder | Kahan Milega? (Welcome Email) | Example |
+|-------------|-------------------------------|---------|
+| `Roll Number` | Student ID / Username | `24010988a` |
+| `Nexus Password` | Nexus Docker Password | `W%Z%4R!eB32X` |
+| `SonarQube Token` | SonarQube Token | `sqa_9767bb48496739...` |
+| `Kubernetes Namespace` | Namespace (Auto: `student-<rollno>`) | `student-24010988a` |
+| `Docker Registry Path` | Nexus Path (Auto: `student-docker/<rollno>`) | `student-docker/24010988a` |
+| `Application Domain` | Domain (Auto: `<rollno>.imcc.skilli.in`) | `24010988a.imcc.skilli.in` |
+
+---
+
+## 🛠️ Deployment Steps (Sirf 4 Steps)
+
+### STEP 1: Jenkins Credentials Banayein (2 Credentials)
+Jenkins Portal: **https://jenkins.imcc.skilli.in**  
+Go to: **Manage Jenkins → Credentials → System → Global credentials → Add Credentials**
+
+#### 1️⃣ SonarQube Token:
 - **Kind:** `Secret text`
-- **Secret:** Apna SonarQube Analysis Token paste karein (e.g. `sqa_xxxxxxxxxxxx` jo email me mila tha)
-- **ID:** `<your-rollno>-sonar-token` *(Apne welcome email se exact ID copy karein, e.g. `2401098a-sonar-token`)*
-- **Description:** `SonarQube Student Token`
+- **Secret:** Email wala Sonar token (`sqa_...`)
+- **ID:** `<rollno>-sonar-token` (e.g. `24010988a-sonar-token`)
 
-#### 2️⃣ Kubernetes Kubeconfig Credential:
-- College Admin Panel me apne profile par jakar **"Download .kubeconfig"** button dabayein (is se `<namespace>-kubeconfig.yaml` file download hogi).
-- Jenkins me Add Credentials par:
-  - **Kind:** `Secret file`
-  - **File:** Download hui `.yaml` file ko choose karein
-  - **ID:** `<your-rollno>-kubeconfig` *(Apne welcome email se exact ID copy karein, e.g. `2401098a-kubeconfig`)*
-  - **Description:** `Student Kubeconfig File`
-
-> ℹ️ **Nexus Registry Credential:** Nexus ke liye alag se Jenkins credential create karne ki zaroorat nahi hai! Nexus login credentials (`NEXUS_USER` & `NEXUS_PASS`) aapko seedha apne `Jenkinsfile` ke environment block me likhne hain (jo email me mile hain).
+#### 2️⃣ Kubeconfig File:
+- Admin Panel (**https://cicd.imcc.skilli.in**) par login karein → Profile → **"Download Kubeconfig"** dabayein.
+- Jenkins par wapas aayein:
+- **Kind:** `Secret file`
+- **File:** Download hui `.yaml` file upload karein.
+- **ID:** `<rollno>-kubeconfig` (e.g. `24010988a-kubeconfig`)
 
 ---
 
-### STEP 3: Jenkins Me Apni Pipeline Job Banayein
-1. Jenkins home dashboard par jayein aur **"New Item"** click karein.
-2. Job ka name likhein: e.g. `my-app` ya `<your-rollno>-pipeline`
-3. **"Pipeline"** select karke **OK** dabayein.
-4. Pipeline configuration me scroll karke:
+### STEP 2: GitHub Par Code Push Karein
+GitHub par ek naya repo banayein aur apne project folder se run karein:
+
+```bash
+git init
+git add .
+git commit -m "feat: setup fullstack devops pipeline"
+git branch -M main
+git remote add origin https://github.com/<your-username>/<your-repo>.git
+git push -u origin main
+```
+
+---
+
+### STEP 3: Jenkins Pipeline Job Banayein
+1. Jenkins mein **"New Item"** click karein.
+2. Name daalein (e.g. `24010988a-project`), **Pipeline** select karein → **OK**.
+3. Niche scroll karein → **Pipeline**:
    - **Definition:** `Pipeline script from SCM`
    - **SCM:** `Git`
-   - **Repository URL:** Apne GitHub repo ka URL (e.g. `https://github.com/username/repo.git`)
-   - **Branch Specifier:** `*/main`
+   - **Repository URL:** Aapke GitHub repo ka URL
+   - **Branch:** `*/main`
    - **Script Path:** `Jenkinsfile`
-5. **Save** par click karein.
+4. **Save** → **"Build Now"** dabayein! 🚀
 
 ---
 
-### STEP 3.5: GitHub Webhook Setup (Auto-Deploy On "git push")
-Agar aap chahte hain ki jaise hi aap `git push origin main` karein, pipeline apne aap background me run hoke deploy ho jaye:
-
-1. Apne GitHub Repository me **Settings** ➔ **Webhooks** ➔ **"Add webhook"** par click karein.
-2. Har field me exact yeh bharein:
-
-| Field Name in GitHub | Kya Bharna Hai? | Detail / Explanation |
-| :--- | :--- | :--- |
-| **Payload URL \*** | `https://jenkins.imcc.skilli.in/github-webhook/` | ⚠️ **Most Important:** Aakhiri ka slash `/` lagana zaroori hai! |
-| **Content type \*** | `application/json` | Dropdown se `application/json` select karein |
-| **Secret** | *(Leave completely empty / Khali chhod dein)* | Kuch nahi likhna |
-| **SSL verification** | `Enable SSL verification` | Enabled select karein |
-| **Which events?** | `Just the push event.` | Sirf push event select rehne dein |
-| **Active** | `[x] Checked` | Checkbox tick hona chahiye |
-
-3. Green button **"Add webhook"** dabayein.  
-   - GitHub par green checkmark `✓ 200 OK` dikhega.
-   - Ab se har `git push` par Jenkins bina open kiye apne aap deploy kar dega! 🚀
+### STEP 4: GitHub Webhook (Auto Deploy on "git push")
+Har commit par auto-deploy ke liye:
+1. GitHub repo → **Settings → Webhooks → Add webhook**
+2. **Payload URL:** `https://jenkins.imcc.skilli.in/github-webhook/` *(Aakhiri slash zaroori hai!)*
+3. **Content type:** `application/json`
+4. **Events:** `Just the push event` → **Add webhook** click karein.
 
 ---
 
-### STEP 4: First Build Run Karein & Verify Karein
-1. Jenkins job page par jakar **"Build Now"** dabayein (first time ek baar click karna zaroori hai).
-2. **Console Output** open karein aur stages verify karein:
-   - ✅ Stage 1: Checkout Code
-   - ✅ Stage 2: Install & Test
-   - ✅ Stage 3: SonarQube Analysis
-   - ✅ Stage 4: Docker Build
-   - ✅ Stage 5: Push to Nexus
-   - ✅ Stage 6: Deploy to Kubernetes
-   - ✅ Stage 7: Verify Rollout Status
-3. Pipeline Success hone ke baad apna assigned Live URL open karein:
-   👉 **`https://<your-rollno>.imcc.skilli.in`**  
-   Aapka application live running dikhega! 🎉
+### STEP 5: Live App Check Karein! 🎉
+Pipeline complete hone ke baad browser mein open karein:
+
+👉 **`https://<rollno>.imcc.skilli.in`**  
+*(Example: `https://24010988a.imcc.skilli.in`)*
 
 ---
 
-## ⚠️ Troubleshooting & Common Errors
-
-1. **SonarQube 401 / 403 Forbidden:**
-   - Check karein ki Jenkins credential ID exact `sonar-token-student` hai ya nahi.
-   - Token email me aaya hua student token (`sqa_...`) hona chahiye.
-
-2. **Nexus Login / Push Denied:**
-   - Verify karein ki credential ID `nexus-student-creds` sahi hai.
-   - Image path aapka assigned repository hona chahiye (e.g. `student-docker/<your-rollno>/my-app`).
-
-3. **Kubernetes Unauthorized / Forbidden:**
-   - Verify karein ki `student-kubeconfig` credential me namespace-scoped kubeconfig upload kiya hai.
-
-4. **ImagePullBackOff in Kubernetes:**
-   - Agar pod create hota hai par image pull nahi hoti, to check karein ki image Nexus par push hui hai aur tag match ho raha hai.
-
-5. **CrashLoopBackOff:**
-   - Check karein ki container port 3000 par listen kar raha hai aur `/health` endpoint response de raha hai.
-
----
-
-## 🏗️ Full-Stack Project Setup (Frontend + Backend: 2 Images)
-
-Agar aapka project Full-Stack hai (jaise React Frontend + Node/Python Backend):
-
-### 1️⃣ Local Testing (Docker Compose)
-Aapke starter kit me `docker-compose.yml` diya gaya hai. Apne computer par local test karne ke liye run karein:
-```bash
-docker compose up --build
-```
-- Frontend open hoga: `http://localhost:3000`
-- Backend API open hoga: `http://localhost:5000`
-- MongoDB chalu hoga: `localhost:27017`
-
-### 2️⃣ Kubernetes Ingress Me Frontend & Backend Kaise Link Hote Hain?
-Student ko sirf **ek hi domain** milta hai (jaise `https://mca-2401060.imcc.skilli.in`). Kubernetes Ingress **Path Routing** use karke dono ko seamlessly link karta hai:
+## 🏗️ Kubernetes Architecture & Zero-CORS Routing
 
 ```
-               [ Browser / User ]
-                        │
-                        ▼ https://mca-2401060.imcc.skilli.in
-            ┌───────────────────────┐
-            │   Kubernetes Ingress  │
-            └───────────┬───────────┘
-                        │
-         ┌──────────────┴──────────────┐
-         ▼ path: /api                  ▼ path: /
-┌─────────────────┐           ┌──────────────────┐
-│ backend-service │           │ frontend-service │
-│   (Port: 5000)  │           │   (Port: 80)     │
-└────────┬────────┘           └────────┬─────────┘
-         ▼                             ▼
-┌─────────────────┐           ┌──────────────────┐
-│   Backend Pod   │           │   Frontend Pod   │
-└─────────────────┘           └──────────────────┘
+                       [ User / Browser ]
+                               │
+                               ▼ https://24010988a.imcc.skilli.in
+                ┌──────────────────────────────┐
+                │   NGINX Ingress Controller   │
+                └──────────────┬───────────────┘
+                               │
+               ┌───────────────┴───────────────┐
+               ▼ path: /api                    ▼ path: /
+    ┌─────────────────────┐         ┌─────────────────────┐
+    │   backend-service   │         │  frontend-service   │
+    │     (Port 5000)     │         │      (Port 80)      │
+    └──────────┬──────────┘         └──────────┬──────────┘
+               ▼                               ▼
+    ┌─────────────────────┐         ┌─────────────────────┐
+    │     Backend Pod     │         │    Frontend Pod     │
+    │  (Node.js / Express)│         │   (Nginx + Vite)    │
+    └─────────────────────┘         └─────────────────────┘
 ```
 
-- **Jab user kisi API ko call karega (`/api/login`, `/api/products`):**  
-  Ingress automatically request ko `backend-service` (Port 5000) par bhejega!
-- **Jab user homepage ya UI kholega (`/`):**  
-  Ingress request ko `frontend-service` par bhejega!
-- **Fayda:** 0% CORS Error! Frontend aur Backend dono same domain par chalte hain!
+> 💡 **Zero CORS Issues:**  
+> Frontend aur Backend dono **same domain** par chalte hain.  
+> Frontend code mein direct relative path call karein: `fetch('/api/users')`.  
+> Ingress automatically us request ko backend container par forward karega!
 
-### 3️⃣ Jenkins Pipeline For Full-Stack
-Agar Frontend aur Backend alag-alag folders me hain, to starter kit me diya hua **`Jenkinsfile.fullstack`** use karein:
-- Stage 4 me Jenkins dono images (`backend` aur `frontend`) ko **Parallel** me build karega.
-- Stage 5 me dono images ko Nexus me push karega:
-  - `nexus.imcc.skilli.in/student-docker/<rollno>/backend:latest`
-  - `nexus.imcc.skilli.in/student-docker/<rollno>/frontend:latest`
-- Stage 6 me `k8s/fullstack-deployment.yaml` apply karke dono pods live kar dega!
+---
 
+## ❓ Troubleshooting & FAQs
+
+| Problem | Wajah (Cause) | Solution |
+|---------|---------------|----------|
+| `Nexus auth FAILED` | Password galat hai | Email se exact Nexus Password copy karein aur `configure.js` dobara chalayein. |
+| `SonarQube 401 Unauthorized` | Jenkins Sonar credential ID match nahi hui | Jenkins credential ID check karein: `<rollno>-sonar-token`. |
+| `Kubernetes auth failed` | Kubeconfig file galat ya expired hai | Admin Panel se fresh kubeconfig download karke Jenkins mein upload karein. |
+| `CrashLoopBackOff` Backend | MongoDB connection issue | `k8s/deployment.yaml` mein `MONGO_URI` verify karein. |
+| `503 Service Unavailable` | Pod abhi start ho raha hai | 30 seconds wait karein; Kubernetes startup probe complete hone par app live ho jayega. |
+
+---
+
+## 🔗 Quick Portal Links
+
+- 🏛️ **Admin Panel:** https://cicd.imcc.skilli.in
+- ⚙️ **Jenkins:** https://jenkins.imcc.skilli.in
+- 🔍 **SonarQube:** https://sonarqube.imcc.skilli.in
+- 📦 **Nexus Registry:** https://nexus.imcc.skilli.in
